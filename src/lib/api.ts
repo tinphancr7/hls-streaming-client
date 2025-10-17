@@ -126,4 +126,94 @@ export const videoApi = {
 	getSegmentUrl: (videoId: string, segmentName: string): string => {
 		return `${API_URL}/videos/${videoId}/segments/${segmentName}`;
 	},
+
+	// Chunked upload - initialize upload session
+	initializeChunkedUpload: async (
+		filename: string,
+		totalChunks: number,
+		totalSize: number,
+		title: string,
+		description?: string,
+		uploadedBy?: string
+	): Promise<{uploadId: string; message: string}> => {
+		const response = await api.post<{uploadId: string; message: string}>(
+			"/chunk-upload/initialize",
+			{
+				filename,
+				totalChunks,
+				totalSize,
+				title,
+				description,
+				uploadedBy,
+			}
+		);
+		return response.data;
+	},
+
+	// Chunked upload - upload a single chunk
+	uploadChunk: async (
+		uploadId: string,
+		chunkIndex: number,
+		chunk: Blob
+	): Promise<{
+		success: boolean;
+		uploadedChunks: number[];
+		isComplete: boolean;
+		message: string;
+	}> => {
+		const formData = new FormData();
+		formData.append("chunk", chunk);
+		formData.append("uploadId", uploadId);
+		formData.append("chunkIndex", chunkIndex.toString());
+
+		const response = await api.post<{
+			success: boolean;
+			uploadedChunks: number[];
+			isComplete: boolean;
+			message: string;
+		}>("/chunk-upload/chunk", formData, {
+			headers: {
+				"Content-Type": "multipart/form-data",
+			},
+		});
+		return response.data;
+	},
+
+	// Get upload status
+	getChunkedUploadStatus: async (
+		uploadId: string
+	): Promise<{
+		upload: unknown;
+		progress: number;
+		missingChunks: number[];
+	}> => {
+		const response = await api.get<{
+			upload: unknown;
+			progress: number;
+			missingChunks: number[];
+		}>(`/chunk-upload/status/${uploadId}`);
+		return response.data;
+	},
+
+	// Retry upload - get missing chunks
+	retryChunkedUpload: async (
+		uploadId: string
+	): Promise<{
+		missingChunks: number[];
+		message: string;
+	}> => {
+		const response = await api.post<{
+			missingChunks: number[];
+			message: string;
+		}>(`/chunk-upload/retry/${uploadId}`);
+		return response.data;
+	},
+
+	// Cancel upload
+	cancelChunkedUpload: async (uploadId: string): Promise<{message: string}> => {
+		const response = await api.delete<{message: string}>(
+			`/chunk-upload/cancel/${uploadId}`
+		);
+		return response.data;
+	},
 };
