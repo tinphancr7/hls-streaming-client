@@ -25,7 +25,6 @@ interface UseChunkedUploadReturn {
 		metadata: {
 			title: string;
 			description?: string;
-			uploadedBy?: string;
 		}
 	) => Promise<void>;
 	cancelUpload: () => void;
@@ -86,7 +85,6 @@ export const useChunkedUpload = (
 			metadata: {
 				title: string;
 				description?: string;
-				uploadedBy?: string;
 			}
 		): Promise<string> => {
 			const response = await fetch(`${apiUrl}/chunk-upload/initialize`, {
@@ -100,7 +98,6 @@ export const useChunkedUpload = (
 					totalSize: file.size,
 					title: metadata.title,
 					description: metadata.description,
-					uploadedBy: metadata.uploadedBy,
 				}),
 				signal: abortControllerRef.current?.signal,
 			});
@@ -169,26 +166,12 @@ export const useChunkedUpload = (
 		[apiUrl]
 	);
 
-	const cancelUploadOnServer = useCallback(
-		async (uploadId: string) => {
-			try {
-				await fetch(`${apiUrl}/chunk-upload/cancel/${uploadId}`, {
-					method: "DELETE",
-				});
-			} catch (error) {
-				console.warn("Failed to cancel upload on server:", error);
-			}
-		},
-		[apiUrl]
-	);
-
 	const uploadFile = useCallback(
 		async (
 			file: File,
 			metadata: {
 				title: string;
 				description?: string;
-				uploadedBy?: string;
 			}
 		): Promise<void> => {
 			if (!file) {
@@ -241,11 +224,6 @@ export const useChunkedUpload = (
 						err instanceof Error ? err.message : "Failed to upload file";
 					setError(errorMessage);
 
-					// Try to cancel upload on server if we have an uploadId
-					if (uploadId) {
-						await cancelUploadOnServer(uploadId);
-					}
-
 					throw err;
 				}
 			} finally {
@@ -253,13 +231,7 @@ export const useChunkedUpload = (
 				abortControllerRef.current = null;
 			}
 		},
-		[
-			chunkSize,
-			uploadChunk,
-			updateProgress,
-			initializeUpload,
-			cancelUploadOnServer,
-		]
+		[chunkSize, uploadChunk, updateProgress, initializeUpload]
 	);
 
 	const cancelUpload = useCallback(() => {

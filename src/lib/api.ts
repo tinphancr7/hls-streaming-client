@@ -36,17 +36,13 @@ export const videoApi = {
 	uploadVideo: async (
 		file: File,
 		title: string,
-		description?: string,
-		uploadedBy?: string
+		description?: string
 	): Promise<Video> => {
 		const formData = new FormData();
 		formData.append("video", file);
 		formData.append("title", title);
 		if (description) {
 			formData.append("description", description);
-		}
-		if (uploadedBy) {
-			formData.append("uploadedBy", uploadedBy);
 		}
 
 		const response = await api.post<Video>("/videos/upload", formData, {
@@ -133,8 +129,7 @@ export const videoApi = {
 		totalChunks: number,
 		totalSize: number,
 		title: string,
-		description?: string,
-		uploadedBy?: string
+		description?: string
 	): Promise<{uploadId: string; message: string}> => {
 		const response = await api.post<{uploadId: string; message: string}>(
 			"/chunk-upload/initialize",
@@ -144,7 +139,6 @@ export const videoApi = {
 				totalSize,
 				title,
 				description,
-				uploadedBy,
 			}
 		);
 		return response.data;
