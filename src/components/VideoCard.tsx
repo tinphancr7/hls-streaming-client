@@ -49,6 +49,7 @@ export default function VideoCard({video}: VideoCardProps) {
 	const thumbnailUrl = video.thumbnailPath
 		? videoApi.getThumbnailUrl(video._id)
 		: null;
+	console.log("Thumbnail URL:", thumbnailUrl);
 
 	return (
 		<Link href={`/watch/${video._id}`} className="block group">

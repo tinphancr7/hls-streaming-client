@@ -68,7 +68,8 @@ export default function UploadForm({onUploadSuccess}: UploadFormProps) {
 	const uploadChunk = async (
 		chunk: Blob,
 		chunkIndex: number,
-		file: File
+		file: File,
+		totalChunksParam: number
 	): Promise<{
 		success: boolean;
 		uploadId: string;
@@ -81,7 +82,7 @@ export default function UploadForm({onUploadSuccess}: UploadFormProps) {
 		formData.append("chunk", chunk);
 		formData.append("chunkIndex", chunkIndex.toString());
 		formData.append("filename", file.name);
-		formData.append("totalChunks", totalChunks.toString());
+		formData.append("totalChunks", totalChunksParam.toString());
 		formData.append("totalSize", file.size.toString());
 		formData.append("title", title);
 		if (description) {
@@ -121,6 +122,7 @@ export default function UploadForm({onUploadSuccess}: UploadFormProps) {
 
 		// Calculate total chunks
 		const chunks = Math.ceil(file.size / CHUNK_SIZE);
+
 		setTotalChunks(chunks);
 
 		// Create abort controller for cancellation
@@ -135,7 +137,7 @@ export default function UploadForm({onUploadSuccess}: UploadFormProps) {
 
 				setCurrentChunk(chunkIndex + 1);
 
-				const result = await uploadChunk(chunk, chunkIndex, file);
+				const result = await uploadChunk(chunk, chunkIndex, file, chunks);
 
 				// Store upload ID from first chunk
 				if (chunkIndex === 0) {
